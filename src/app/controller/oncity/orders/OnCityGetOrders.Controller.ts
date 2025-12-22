@@ -8,7 +8,7 @@ export class OnCityGetOrdersController {
   constructor(private readonly ordersService: OnCityGetOrdersService) {}
 
   @ApiOperation({
-    summary: 'Listar órdenes de venta de OnCity (VTEX)'
+    summary: 'Listar órdenes de venta de OnCity'
   })
   @Get()
   async list() {
