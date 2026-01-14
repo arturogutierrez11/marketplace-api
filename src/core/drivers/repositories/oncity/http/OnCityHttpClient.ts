@@ -56,4 +56,22 @@ export class OnCityHttpClient {
       throw new Error(`[ONCITY POST] ${url} → ${err.message}`);
     }
   }
+
+  async put<T>(url: string, body: any, options?: { baseURL?: string }): Promise<T> {
+    try {
+      const response = await this.client.put<T>(url, body, {
+        baseURL: options?.baseURL
+      });
+
+      return response.data;
+    } catch (error) {
+      const err = error as AxiosError;
+
+      if (err.response) {
+        throw new OnCityHttpError(err.response.status, err.response.data, `[ONCITY PUT] ${url}`);
+      }
+
+      throw new Error(`[ONCITY PUT] ${url} → ${err.message}`);
+    }
+  }
 }

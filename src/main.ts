@@ -14,10 +14,9 @@ async function bootstrap() {
     })
   );
 
-  setupSwagger(app, 'Marketplace API', 'API para integración con marketplaces (Megatone)', [
+  setupSwagger(app, 'Marketplace API', 'API para integración con marketplaces (Megatone, On city)', [
     'megatone',
-    'products',
-    'marketplace'
+    'oncity'
   ]);
 
   await app.listen(3000);
