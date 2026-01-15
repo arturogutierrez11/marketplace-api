@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Query, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Body, BadRequestException } from '@nestjs/common';
 import { ApiOperation, ApiTags, ApiBody } from '@nestjs/swagger';
 import { MegatoneUpdatePriceStockService } from 'src/app/services/megatone/products/update/MegatoneUpdatePriceStockService';
 
@@ -17,6 +17,7 @@ export class MegatoneUpdatePriceStockController {
       properties: {
         items: {
           type: 'array',
+          minItems: 1,
           items: {
             type: 'object',
             required: ['publicationId'],
@@ -53,7 +54,6 @@ export class MegatoneUpdatePriceStockController {
   })
   @Post('update')
   async bulkUpdate(
-    @Query('sellerId') sellerIdRaw: string,
     @Body()
     body: {
       items: {
@@ -66,15 +66,6 @@ export class MegatoneUpdatePriceStockController {
       }[];
     }
   ) {
-    const sellerId = Number(sellerIdRaw);
-
-    /* ==========================
-       VALIDACIONES QUERY
-    ========================== */
-    if (!sellerId || Number.isNaN(sellerId)) {
-      throw new BadRequestException('sellerId inválido');
-    }
-
     /* ==========================
        VALIDACIONES BODY
     ========================== */
@@ -88,13 +79,17 @@ export class MegatoneUpdatePriceStockController {
       }
 
       const hasData =
-        item.precioLista !== undefined || item.precioPromocional !== undefined || item.stock !== undefined;
+        item.precioLista !== undefined ||
+        item.precioPromocional !== undefined ||
+        item.stock !== undefined ||
+        item.alicuotaIva !== undefined ||
+        item.alicuotaImpuestoInterno !== undefined;
 
       if (!hasData) {
         throw new BadRequestException(`El item ${item.publicationId} no tiene datos para actualizar`);
       }
     }
 
-    return this.updateService.bulkUpdate(sellerId, body.items);
+    return this.updateService.bulkUpdate(body.items);
   }
 }

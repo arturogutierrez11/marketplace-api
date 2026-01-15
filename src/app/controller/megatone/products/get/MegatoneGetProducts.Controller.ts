@@ -1,4 +1,4 @@
-import { Controller, Get, Inject, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { MegatoneProductsService } from 'src/app/services/megatone/products/get/MegatoneProductsService';
 
@@ -9,16 +9,15 @@ export class MegatoneProductsController {
 
   /* ======================================
      LISTAR TODOS LOS PRODUCTOS
-     GET /marketplace/megatone/products
+     GET /megatone/products
   ====================================== */
-  @ApiOperation({ summary: 'Listar Todos los productos de Megatone' })
+  @ApiOperation({ summary: 'Listar todos los productos de Megatone' })
   @Get()
-  async listAll(@Query('sellerId') sellerId: string, @Query('limit') limit = '50', @Query('offset') offset = '0') {
-    const parsedSellerId = Number(sellerId);
+  async listAll(@Query('limit') limit = '50', @Query('offset') offset = '0') {
     const parsedLimit = Math.min(Number(limit) || 50, 100);
     const parsedOffset = Number(offset) || 0;
 
-    return this.productsService.listAll(parsedSellerId, {
+    return this.productsService.listAll({
       limit: parsedLimit,
       offset: parsedOffset
     });
@@ -26,16 +25,15 @@ export class MegatoneProductsController {
 
   /* ======================================
      LISTAR SOLO IDS
-     GET /marketplace/megatone/products/ids
+     GET /megatone/products/ids
   ====================================== */
-  @ApiOperation({ summary: 'Listar Todos los ID de los productos de Megatone' })
+  @ApiOperation({ summary: 'Listar todos los IDs de productos de Megatone' })
   @Get('/ids')
-  async listIds(@Query('sellerId') sellerId: string, @Query('limit') limit = '100', @Query('offset') offset = '0') {
-    const parsedSellerId = Number(sellerId);
+  async listIds(@Query('limit') limit = '100', @Query('offset') offset = '0') {
     const parsedLimit = Math.min(Number(limit) || 100, 200);
     const parsedOffset = Number(offset) || 0;
 
-    return this.productsService.listIds(parsedSellerId, {
+    return this.productsService.listIds({
       limit: parsedLimit,
       offset: parsedOffset
     });
@@ -43,14 +41,13 @@ export class MegatoneProductsController {
 
   /* ======================================
      OBTENER UN PRODUCTO
-     GET /marketplace/megatone/products/:publicationId
+     GET /megatone/products/:publicationId
   ====================================== */
-  @ApiOperation({ summary: 'Listar un producto de Megatone por ID' })
+  @ApiOperation({ summary: 'Obtener un producto de Megatone por ID' })
   @Get('/:publicationId')
-  async getOne(@Param('publicationId') publicationId: string, @Query('sellerId') sellerId: string) {
-    const parsedSellerId = Number(sellerId);
+  async getOne(@Param('publicationId') publicationId: string) {
     const parsedPublicationId = Number(publicationId);
 
-    return this.productsService.getOne(parsedSellerId, parsedPublicationId);
+    return this.productsService.getOne(parsedPublicationId);
   }
 }

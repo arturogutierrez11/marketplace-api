@@ -10,8 +10,8 @@ export class MegatoneDeleteProductService {
     private readonly deleteRepository: IMegatoneDeleteProductsRepository
   ) {}
 
-  async deletePublication(sellerId: number, publicationId: number): Promise<MarketplaceDeleteResult> {
-    const response = await this.deleteRepository.delete(sellerId, publicationId);
+  async deletePublication(publicationId: number): Promise<MarketplaceDeleteResult> {
+    const response = await this.deleteRepository.delete(publicationId);
 
     if (!response.Errores || response.Errores.length === 0) {
       return {

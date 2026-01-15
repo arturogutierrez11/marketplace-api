@@ -9,11 +9,11 @@ import { MegatoneDeleteProductsController } from 'src/app/controller/megatone/pr
 import { MegatoneDeleteProductService } from 'src/app/services/megatone/products/delete/MegatoneDeleteProductService';
 import { MegatoneDeleteProductsRepository } from 'src/core/drivers/repositories/megatone/products/delete/MegatoneDeleteProductsRepository';
 import { MegatoneUpdatePriceStockController } from 'src/app/controller/megatone/products/update/MegatoneUpdatePriceStock.Controller';
-import { MegatoneUpdatePriceRepository } from 'src/core/drivers/repositories/megatone/products/update-price/MegatoneUpdatePriceRepository';
 import { MegatoneUpdatePriceStockService } from 'src/app/services/megatone/products/update/MegatoneUpdatePriceStockService';
 import { MegatonePublishProductsController } from 'src/app/controller/megatone/products/publish/MegatonePublishProducts.Controller';
 import { MegatonePublishProductsRepository } from 'src/core/drivers/repositories/megatone/products/publish/MegatonePublishProductsRepository';
 import { MegatonePublishProductsService } from 'src/app/services/megatone/products/publish/MegatonePublishProductsService';
+import { MegatoneUpdatePriceStockRepository } from 'src/core/drivers/repositories/megatone/products/update-price-stock/MegatoneUpdatePriceStockRepository';
 
 @Module({
   controllers: [
@@ -46,8 +46,8 @@ import { MegatonePublishProductsService } from 'src/app/services/megatone/produc
       useClass: MegatoneDeleteProductsRepository
     },
     {
-      provide: 'IMegatoneUpdatePriceRepository',
-      useClass: MegatoneUpdatePriceRepository
+      provide: 'IMegatoneUpdatePriceStockRepository',
+      useClass: MegatoneUpdatePriceStockRepository
     },
 
     MegatoneHttpClient,

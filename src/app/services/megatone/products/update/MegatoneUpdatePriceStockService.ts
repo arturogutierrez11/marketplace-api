@@ -1,19 +1,18 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { IMegatoneUpdatePriceRepository } from 'src/core/adapters/repositories/megatone/products/update-stock/IMegatoneUpdateStockRepository';
+import { IMegatoneUpdatePriceStockRepository } from 'src/core/adapters/repositories/megatone/products/update-price-stock/IMegatoneUpdateStockRepository';
+import { MarketplaceBulkUpdateResult } from 'src/core/entities/megatone/products/update/MarketplaceBulkUpdateResult';
 import { MegatoneBulkUpdateItemResult } from 'src/core/entities/megatone/products/update/MegatoneBulkUpdateItemResult';
-import { MarketplaceBulkUpdateResult } from 'src/core/entities/megatone/products/update/MegatoneBulkUpdateResult';
-
 import { MegatoneBulkUpdateStatus } from 'src/core/entities/megatone/products/update/MegatoneBulkUpdateStatus';
+import { MegatoneUpdatePriceStockBulkCommand } from 'src/core/entities/megatone/products/update/MegatoneUpdatePriceStockBulkCommand';
 
 @Injectable()
 export class MegatoneUpdatePriceStockService {
   constructor(
-    @Inject('IMegatoneUpdatePriceRepository')
-    private readonly updateRepository: IMegatoneUpdatePriceRepository
+    @Inject('IMegatoneUpdatePriceStockRepository')
+    private readonly updateRepository: IMegatoneUpdatePriceStockRepository
   ) {}
 
   async bulkUpdate(
-    sellerId: number,
     items: {
       publicationId: number;
       precioLista?: number;
@@ -23,8 +22,7 @@ export class MegatoneUpdatePriceStockService {
       alicuotaImpuestoInterno?: number;
     }[]
   ): Promise<MarketplaceBulkUpdateResult> {
-    const payload = {
-      IdUser: sellerId,
+    const payload: MegatoneUpdatePriceStockBulkCommand = {
       actualizarPrecioYStockBulks: items.map(item => ({
         IdPublicacion: item.publicationId,
         PrecioLista: item.precioLista,
@@ -40,7 +38,7 @@ export class MegatoneUpdatePriceStockService {
     const results: MegatoneBulkUpdateItemResult[] = [];
 
     /* ==========================
-       ✅ PROCESAR SUCCESS
+       ✅ SUCCESS
     ========================== */
     for (const pub of response.Publicacion ?? []) {
       results.push({
@@ -51,7 +49,7 @@ export class MegatoneUpdatePriceStockService {
     }
 
     /* ==========================
-       ❌ PROCESAR ERRORES
+       ❌ ERRORES
     ========================== */
     for (const err of response.Errors ?? []) {
       results.push({

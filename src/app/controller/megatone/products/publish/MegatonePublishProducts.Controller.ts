@@ -1,8 +1,7 @@
-import { Controller, Post, Body, Query, BadRequestException } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBody, ApiQuery } from '@nestjs/swagger';
+import { Controller, Post, Body, BadRequestException } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
 
 import { MegatonePublishProductsService } from 'src/app/services/megatone/products/publish/MegatonePublishProductsService';
-
 import { MegatonePublishBulkRequestDto } from 'src/core/entities/megatone/products/publish/dto/MegatonePublishBulkRequestDto';
 
 @ApiTags('megatone')
@@ -11,12 +10,6 @@ export class MegatonePublishProductsController {
   constructor(private readonly publishService: MegatonePublishProductsService) {}
 
   @ApiOperation({ summary: 'Publicar productos en Megatone (bulk)' })
-  @ApiQuery({
-    name: 'sellerId',
-    required: true,
-    example: 389,
-    description: 'ID del seller en Megatone'
-  })
   @ApiBody({
     schema: {
       type: 'object',
@@ -110,13 +103,7 @@ export class MegatonePublishProductsController {
     }
   })
   @Post('publish')
-  async publishBulk(@Query('sellerId') sellerIdRaw: string, @Body() body: MegatonePublishBulkRequestDto) {
-    const sellerId = Number(sellerIdRaw);
-
-    if (!sellerId || Number.isNaN(sellerId)) {
-      throw new BadRequestException('sellerId inválido');
-    }
-
+  async publishBulk(@Body() body: MegatonePublishBulkRequestDto) {
     if (!body?.MasivaBulks || !Array.isArray(body.MasivaBulks) || body.MasivaBulks.length === 0) {
       throw new BadRequestException('MasivaBulks debe ser un array con al menos un item');
     }
@@ -143,6 +130,6 @@ export class MegatonePublishProductsController {
       }
     }
 
-    return this.publishService.publishBulk(sellerId, body);
+    return this.publishService.publishBulk(body);
   }
 }

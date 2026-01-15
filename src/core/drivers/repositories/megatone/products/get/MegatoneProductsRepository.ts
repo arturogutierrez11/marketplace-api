@@ -7,17 +7,20 @@ import { MarketplaceProduct } from 'src/core/entities/megatone/products/get/Mark
 import { MarketplacePublicationId } from 'src/core/entities/megatone/products/get/MarketplacePublicationId';
 import { MegatoneGetProductsResponseDto } from 'src/core/entities/megatone/products/get/dto/MegatoneProductsResponseDto';
 import { MegatoneProductMapper } from './mappers/MegatoneProductMapper';
+import { MegatoneSellerContext } from '../../sellerContext/MegatoneSellerContext';
 
 @Injectable()
 export class MegatoneProductsRepository implements IMegatoneGetProductsRepository {
+  private readonly sellerId = MegatoneSellerContext.getSellerId();
+
   constructor(private readonly http: MegatoneHttpClient) {}
 
-  async listAll(sellerId: number, pagination: PaginationParams): Promise<PaginatedResult<MarketplaceProduct>> {
+  async listAll(pagination: PaginationParams): Promise<PaginatedResult<MarketplaceProduct>> {
     const page = Math.floor(pagination.offset / pagination.limit) + 1;
 
     const response = await this.http.get<MegatoneGetProductsResponseDto>('/api/MarketplaceCore/Publicaciones', {
       params: {
-        IdSeller: sellerId,
+        IdSeller: this.sellerId,
         NumeroPagina: page,
         CantidadPagina: pagination.limit
       }
@@ -34,12 +37,12 @@ export class MegatoneProductsRepository implements IMegatoneGetProductsRepositor
     };
   }
 
-  async listIds(sellerId: number, pagination: PaginationParams): Promise<PaginatedResult<MarketplacePublicationId>> {
+  async listIds(pagination: PaginationParams): Promise<PaginatedResult<MarketplacePublicationId>> {
     const page = Math.floor(pagination.offset / pagination.limit) + 1;
 
     const response = await this.http.get<MegatoneGetProductsResponseDto>('/api/MarketplaceCore/Publicaciones', {
       params: {
-        IdSeller: sellerId,
+        IdSeller: this.sellerId,
         NumeroPagina: page,
         CantidadPagina: pagination.limit
       }
@@ -59,10 +62,10 @@ export class MegatoneProductsRepository implements IMegatoneGetProductsRepositor
     };
   }
 
-  async getOne(sellerId: number, publicationId: number): Promise<MarketplaceProduct | null> {
+  async getOne(publicationId: number): Promise<MarketplaceProduct | null> {
     const response = await this.http.get<MegatoneGetProductsResponseDto>('/api/MarketplaceCore/Publicaciones', {
       params: {
-        IdSeller: sellerId,
+        IdSeller: this.sellerId,
         NumeroPagina: 1,
         CantidadPagina: 1,
         IdPublicacion: publicationId

@@ -1,30 +1,28 @@
 import { Injectable, Inject } from '@nestjs/common';
-
 import { IMegatonePublishProductsRepository } from 'src/core/adapters/repositories/megatone/products/publish/IMegatonePublishProductsRepository';
-
 import { MegatonePublishBulkRequestDto } from 'src/core/entities/megatone/products/publish/dto/MegatonePublishBulkRequestDto';
-
 import { MarketplacePublishResult } from 'src/core/entities/megatone/products/publish/MarketplacePublishResult';
-
 import { MarketplacePublishItemResult } from 'src/core/entities/megatone/products/publish/MarketplacePublishItemResult';
-
 import { MarketplacePublishStatus } from 'src/core/entities/megatone/products/publish/MarketplacePublishStatus';
+import { MegatoneSellerContext } from 'src/core/drivers/repositories/megatone/sellerContext/MegatoneSellerContext';
 
 @Injectable()
 export class MegatonePublishProductsService {
+  private readonly sellerId = MegatoneSellerContext.getSellerId();
+
   constructor(
     @Inject('IMegatonePublishProductsRepository')
     private readonly publishRepository: IMegatonePublishProductsRepository
   ) {}
 
-  async publishBulk(sellerId: number, body: MegatonePublishBulkRequestDto): Promise<MarketplacePublishResult> {
+  async publishBulk(body: MegatonePublishBulkRequestDto): Promise<MarketplacePublishResult> {
     /* ============================
        🧱 ARMAR PAYLOAD FINAL
     ============================ */
     const payload: MegatonePublishBulkRequestDto = {
       MasivaBulks: body.MasivaBulks.map(item => ({
         ...item,
-        IdSeller: sellerId
+        IdSeller: this.sellerId
       }))
     };
 
@@ -50,31 +48,19 @@ export class MegatonePublishProductsService {
     for (const err of response.Errors ?? []) {
       const message = err.ErrorMesage ?? 'Error Megatone';
 
-      // SKU ya existente
       if (err.Target === 'SkuSeller' && message.toLowerCase().includes('existe')) {
         results.push({
           skuSeller: err.SkuSeller,
           status: MarketplacePublishStatus.SKIPPED,
-          errors: [
-            {
-              target: err.Target,
-              message
-            }
-          ]
+          errors: [{ target: err.Target, message }]
         });
         continue;
       }
 
-      // Error real
       results.push({
         skuSeller: err.SkuSeller,
         status: MarketplacePublishStatus.FAILED,
-        errors: [
-          {
-            target: err.Target,
-            message
-          }
-        ]
+        errors: [{ target: err.Target, message }]
       });
     }
 
@@ -86,13 +72,10 @@ export class MegatonePublishProductsService {
     const skipped = results.filter(r => r.status === MarketplacePublishStatus.SKIPPED).length;
     const failed = results.filter(r => r.status === MarketplacePublishStatus.FAILED).length;
 
-    let globalStatus: MarketplacePublishStatus = MarketplacePublishStatus.PUBLISHED;
+    let globalStatus = MarketplacePublishStatus.PUBLISHED;
 
-    if (failed === total) {
-      globalStatus = MarketplacePublishStatus.FAILED;
-    } else if (failed > 0 || skipped > 0) {
-      globalStatus = MarketplacePublishStatus.PARTIAL;
-    }
+    if (failed === total) globalStatus = MarketplacePublishStatus.FAILED;
+    else if (failed > 0 || skipped > 0) globalStatus = MarketplacePublishStatus.PARTIAL;
 
     return {
       status: globalStatus,

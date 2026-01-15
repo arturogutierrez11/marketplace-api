@@ -15,21 +15,21 @@ export class MegatoneProductsService {
   /* ======================================
      LISTAR TODOS LOS PRODUCTOS
   ====================================== */
-  async listAll(sellerId: number, pagination: PaginationParams): Promise<PaginatedResult<MarketplaceProduct>> {
-    return this.productsRepository.listAll(sellerId, pagination);
+  async listAll(pagination: PaginationParams): Promise<PaginatedResult<MarketplaceProduct>> {
+    return this.productsRepository.listAll(pagination);
   }
 
   /* ======================================
      LISTAR SOLO IDS
   ====================================== */
-  async listIds(sellerId: number, pagination: PaginationParams): Promise<PaginatedResult<MarketplacePublicationId>> {
-    return this.productsRepository.listIds(sellerId, pagination);
+  async listIds(pagination: PaginationParams): Promise<PaginatedResult<MarketplacePublicationId>> {
+    return this.productsRepository.listIds(pagination);
   }
 
   /* ======================================
      OBTENER UN PRODUCTO
   ====================================== */
-  async getOne(sellerId: number, publicationId: number): Promise<MarketplaceProduct | null> {
-    return this.productsRepository.getOne(sellerId, publicationId);
+  async getOne(publicationId: number): Promise<MarketplaceProduct | null> {
+    return this.productsRepository.getOne(publicationId);
   }
 }

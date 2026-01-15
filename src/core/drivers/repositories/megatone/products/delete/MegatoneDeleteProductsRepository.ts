@@ -2,15 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { MegatoneHttpClient } from '../../http/MegatoneHttpClient';
 import { IMegatoneDeleteProductsRepository } from 'src/core/adapters/repositories/megatone/products/delete/IMegatoneDeleteProductsRepository';
 import { MegatoneResponseDto } from 'src/core/entities/megatone/products/delete/dto/MegatoneResponseDto';
+import { MegatoneSellerContext } from '../../sellerContext/MegatoneSellerContext';
 
 @Injectable()
 export class MegatoneDeleteProductsRepository implements IMegatoneDeleteProductsRepository {
+  private readonly sellerId = MegatoneSellerContext.getSellerId();
+
   constructor(private readonly http: MegatoneHttpClient) {}
 
-  async delete(sellerId: number, publicationId: number): Promise<MegatoneResponseDto> {
+  async delete(publicationId: number): Promise<MegatoneResponseDto> {
     return this.http.delete<MegatoneResponseDto>(`/api/MarketplaceCore/Publicaciones/${publicationId}`, {
       params: {
-        IdSeller: sellerId
+        IdSeller: this.sellerId
       }
     });
   }
