@@ -1,5 +1,5 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags, ApiQuery } from '@nestjs/swagger';
 import { MegatoneProductsService } from 'src/app/services/megatone/products/get/MegatoneProductsService';
 
 @ApiTags('megatone')
@@ -7,11 +7,9 @@ import { MegatoneProductsService } from 'src/app/services/megatone/products/get/
 export class MegatoneProductsController {
   constructor(private readonly productsService: MegatoneProductsService) {}
 
-  /* ======================================
-     LISTAR TODOS LOS PRODUCTOS
-     GET /megatone/products
-  ====================================== */
-  @ApiOperation({ summary: 'Listar todos los productos de Megatone' })
+  @ApiOperation({ summary: 'Listar productos de Megatone (paginado)' })
+  @ApiQuery({ name: 'limit', required: false, example: 10 })
+  @ApiQuery({ name: 'offset', required: false, example: 0 })
   @Get()
   async listAll(@Query('limit') limit = '50', @Query('offset') offset = '0') {
     const parsedLimit = Math.min(Number(limit) || 50, 100);
@@ -23,11 +21,7 @@ export class MegatoneProductsController {
     });
   }
 
-  /* ======================================
-     LISTAR SOLO IDS
-     GET /megatone/products/ids
-  ====================================== */
-  @ApiOperation({ summary: 'Listar todos los IDs de productos de Megatone' })
+  @ApiOperation({ summary: 'Listar solo IDs de productos Megatone' })
   @Get('/ids')
   async listIds(@Query('limit') limit = '100', @Query('offset') offset = '0') {
     const parsedLimit = Math.min(Number(limit) || 100, 200);
@@ -39,15 +33,9 @@ export class MegatoneProductsController {
     });
   }
 
-  /* ======================================
-     OBTENER UN PRODUCTO
-     GET /megatone/products/:publicationId
-  ====================================== */
-  @ApiOperation({ summary: 'Obtener un producto de Megatone por ID' })
+  @ApiOperation({ summary: 'Obtener producto Megatone por publicationId' })
   @Get('/:publicationId')
   async getOne(@Param('publicationId') publicationId: string) {
-    const parsedPublicationId = Number(publicationId);
-
-    return this.productsService.getOne(parsedPublicationId);
+    return this.productsService.getOne(Number(publicationId));
   }
 }

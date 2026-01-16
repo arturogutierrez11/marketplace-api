@@ -1,13 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { MegatoneHttpClient } from '../../http/MegatoneHttpClient';
-import { IMegatoneGetProductsRepository } from 'src/core/adapters/repositories/megatone/products/get/IMegatoneGetProductsRepository';
-import { PaginatedResult } from 'src/core/entities/common/PaginatedResult';
-import { PaginationParams } from 'src/core/entities/common/Pagination';
-import { MarketplaceProduct } from 'src/core/entities/megatone/products/get/MarketplaceProduct';
-import { MarketplacePublicationId } from 'src/core/entities/megatone/products/get/MarketplacePublicationId';
 import { MegatoneGetProductsResponseDto } from 'src/core/entities/megatone/products/get/dto/MegatoneProductsResponseDto';
+import { MarketplaceProduct } from 'src/core/entities/megatone/products/get/MarketplaceProduct';
 import { MegatoneProductMapper } from './mappers/MegatoneProductMapper';
+import { PaginationParams } from 'src/core/entities/common/Pagination';
+import { MarketplacePublicationId } from 'src/core/entities/megatone/products/get/MarketplacePublicationId';
+import { PaginatedResult } from 'src/core/entities/common/PaginatedResult';
+import { IMegatoneGetProductsRepository } from 'src/core/adapters/repositories/megatone/products/get/IMegatoneGetProductsRepository';
 import { MegatoneSellerContext } from '../../sellerContext/MegatoneSellerContext';
+import { MegatoneHttpClient } from '../../http/MegatoneHttpClient';
+import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class MegatoneProductsRepository implements IMegatoneGetProductsRepository {
@@ -15,14 +15,17 @@ export class MegatoneProductsRepository implements IMegatoneGetProductsRepositor
 
   constructor(private readonly http: MegatoneHttpClient) {}
 
+  /* ======================================
+     LIST ALL
+  ====================================== */
   async listAll(pagination: PaginationParams): Promise<PaginatedResult<MarketplaceProduct>> {
     const page = Math.floor(pagination.offset / pagination.limit) + 1;
 
     const response = await this.http.get<MegatoneGetProductsResponseDto>('/api/MarketplaceCore/Publicaciones', {
       params: {
         IdSeller: this.sellerId,
-        NumeroPagina: page,
-        CantidadPagina: pagination.limit
+        Pagina: page,
+        Cantidad: pagination.limit
       }
     });
 
@@ -37,14 +40,17 @@ export class MegatoneProductsRepository implements IMegatoneGetProductsRepositor
     };
   }
 
+  /* ======================================
+     LIST IDS
+  ====================================== */
   async listIds(pagination: PaginationParams): Promise<PaginatedResult<MarketplacePublicationId>> {
     const page = Math.floor(pagination.offset / pagination.limit) + 1;
 
     const response = await this.http.get<MegatoneGetProductsResponseDto>('/api/MarketplaceCore/Publicaciones', {
       params: {
         IdSeller: this.sellerId,
-        NumeroPagina: page,
-        CantidadPagina: pagination.limit
+        Pagina: page,
+        Cantidad: pagination.limit
       }
     });
 
@@ -62,13 +68,16 @@ export class MegatoneProductsRepository implements IMegatoneGetProductsRepositor
     };
   }
 
+  /* ======================================
+     GET ONE
+  ====================================== */
   async getOne(publicationId: number): Promise<MarketplaceProduct | null> {
     const response = await this.http.get<MegatoneGetProductsResponseDto>('/api/MarketplaceCore/Publicaciones', {
       params: {
         IdSeller: this.sellerId,
-        NumeroPagina: 1,
-        CantidadPagina: 1,
-        IdPublicacion: publicationId
+        IdPublicacion: publicationId,
+        Pagina: 1,
+        Cantidad: 1
       }
     });
 
