@@ -14,19 +14,24 @@ import { MegatonePublishProductsController } from 'src/app/controller/megatone/p
 import { MegatonePublishProductsRepository } from 'src/core/drivers/repositories/megatone/products/publish/MegatonePublishProductsRepository';
 import { MegatonePublishProductsService } from 'src/app/services/megatone/products/publish/MegatonePublishProductsService';
 import { MegatoneUpdatePriceStockRepository } from 'src/core/drivers/repositories/megatone/products/update-price-stock/MegatoneUpdatePriceStockRepository';
+import { MegatoneUpdateStatusRepository } from 'src/core/drivers/repositories/megatone/products/update-status/MegatoneUpdateStatusRepository';
+import { MegatoneUpdateStatusService } from 'src/app/services/megatone/products/update-status/MegatoneUpdateStatusService';
+import { MegatoneUpdateStatusController } from 'src/app/controller/megatone/products/update-status/MegatoneUpdateStatus.Controller';
 
 @Module({
   controllers: [
     MegatoneProductsController,
     MegatoneDeleteProductsController,
     MegatoneUpdatePriceStockController,
-    MegatonePublishProductsController
+    MegatonePublishProductsController,
+    MegatoneUpdateStatusController
   ],
   providers: [
     MegatoneProductsService,
     MegatoneDeleteProductService,
     MegatoneUpdatePriceStockService,
     MegatonePublishProductsService,
+    MegatoneUpdateStatusService,
 
     {
       provide: 'IMegatonePublishProductsRepository',
@@ -48,6 +53,10 @@ import { MegatoneUpdatePriceStockRepository } from 'src/core/drivers/repositorie
     {
       provide: 'IMegatoneUpdatePriceStockRepository',
       useClass: MegatoneUpdatePriceStockRepository
+    },
+    {
+      provide: 'IMegatoneUpdateStatusPublicacionRepository',
+      useClass: MegatoneUpdateStatusRepository
     },
 
     MegatoneHttpClient,
