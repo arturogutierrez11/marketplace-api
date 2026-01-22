@@ -10,4 +10,5 @@ export interface MarketplaceProduct {
   category?: string;
   brand?: string;
   images: string[];
+  LinkPublicacion: string;
 }

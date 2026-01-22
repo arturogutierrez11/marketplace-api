@@ -17,7 +17,7 @@ export interface MegatoneProductDto {
 
   EnvioGratis: boolean;
 
-  LinkPublicacion?: string;
+  LinkPublicacion: string;
 
   Categoria?: {
     Codigo: number;

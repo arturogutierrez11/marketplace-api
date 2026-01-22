@@ -11,6 +11,7 @@ export class MegatoneProductMapper {
       price: item.PrecioLista,
       stock: item.Stock,
       status: item.Estado,
+      LinkPublicacion: item.LinkPublicacion,
       images: (item.Imagenes ?? []).map(img => img.UrlImagen)
     };
   }
