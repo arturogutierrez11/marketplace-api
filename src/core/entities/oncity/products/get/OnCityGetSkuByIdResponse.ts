@@ -6,4 +6,5 @@ export interface OnCityGetSkuByIdResponse {
   name: string;
   brand: string;
   isActive: boolean;
+  DetailUrl: string;
 }

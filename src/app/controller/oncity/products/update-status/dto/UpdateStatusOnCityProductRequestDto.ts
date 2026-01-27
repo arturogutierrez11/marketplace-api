@@ -1,7 +1,9 @@
-import { IsString, IsArray, IsBoolean, IsOptional, IsNotEmpty, ValidateNested, IsNumber } from 'class-validator';
+import { IsString, IsArray, IsBoolean, IsNumber, IsOptional, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
-class OnCityImageDto {
+/* --------------------------------- Images -------------------------------- */
+
+class OnCityProductImageDto {
   @IsString()
   id: string;
 
@@ -12,6 +14,8 @@ class OnCityImageDto {
   @IsString()
   alt?: string;
 }
+
+/* -------------------------------- Dimensions ----------------------------- */
 
 class OnCitySkuDimensionsDto {
   @IsNumber()
@@ -24,7 +28,12 @@ class OnCitySkuDimensionsDto {
   length: number;
 }
 
+/* ---------------------------------- SKU ---------------------------------- */
+
 class OnCitySkuDto {
+  @IsString()
+  id: string;
+
   @IsString()
   externalId: string;
 
@@ -51,9 +60,13 @@ class OnCitySkuDto {
   images: string[];
 }
 
-export class CreateOnCityProductRequestDto {
+/* -------------------------------- PRODUCT -------------------------------- */
+
+export class UpdateOnCityProductRequestDto {
   @IsString()
-  @IsNotEmpty()
+  id: string;
+
+  @IsString()
   externalId: string;
 
   @IsString()
@@ -81,8 +94,8 @@ export class CreateOnCityProductRequestDto {
   slug: string;
 
   @ValidateNested({ each: true })
-  @Type(() => OnCityImageDto)
-  images: OnCityImageDto[];
+  @Type(() => OnCityProductImageDto)
+  images: OnCityProductImageDto[];
 
   @ValidateNested({ each: true })
   @Type(() => OnCitySkuDto)

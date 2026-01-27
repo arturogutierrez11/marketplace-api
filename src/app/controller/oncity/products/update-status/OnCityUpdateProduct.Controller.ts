@@ -1,34 +1,32 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Put, Param, Body } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
-import { CreateOnCityProductRequestDto } from './dto/CreateOnCityProductRequest.dto';
-import { OnCityCreateProductService } from 'src/app/services/oncity/products/create/OnCityCreateProductService';
+import { UpdateOnCityProductRequestDto } from './dto/UpdateStatusOnCityProductRequestDto';
+import { OnCityUpdateStatusProductService } from 'src/app/services/oncity/products/update-status/OnCityUpdateStatusProductService';
 
 @ApiTags('oncity')
 @Controller('oncity/products')
-export class OnCityCreateProductController {
-  constructor(private readonly service: OnCityCreateProductService) {}
+export class OnCityUpdateProductController {
+  constructor(private readonly service: OnCityUpdateStatusProductService) {}
 
   @ApiOperation({
-    summary: 'Crear producto en OnCity (VTEX Seller Portal)',
+    summary: 'Actualizar estado (active / inactive) de un producto en OnCity',
     description: `
-Crea un producto completo usando la API **VTEX Seller Portal**.
+Actualiza un producto existente en VTEX Seller Portal.
 
-Incluye:
-- Producto
-- Categorías
-- Marca
-- Imágenes
-- SKUs
-- Dimensiones
-
-⚠️ Requiere permisos de **Seller Portal** en la API Key.
+⚠️ Reglas importantes:
+- El productId del path debe ser el ID numérico del producto
+- El body debe ser COMPLETO
+- El body debe incluir id + externalId
+- Los SKUs deben incluir su id
+- VTEX NO acepta updates parciales
 `
   })
   @ApiBody({
-    description: 'Payload alternativo para crear producto en VTEX Seller Portal',
+    description: 'Payload completo requerido por VTEX Seller Portal para actualizar un producto',
     schema: {
       type: 'object',
       required: [
+        'id',
         'externalId',
         'status',
         'name',
@@ -41,15 +39,20 @@ Incluye:
         'origin'
       ],
       properties: {
+        id: {
+          type: 'string',
+          example: '2173',
+          description: 'ID numérico del producto (debe coincidir con el path)'
+        },
         externalId: {
           type: 'string',
           example: 'ALT-TSHIRT-002',
-          description: 'ID externo único del producto'
+          description: 'ID externo del producto'
         },
         status: {
           type: 'string',
           enum: ['active', 'inactive'],
-          example: 'active',
+          example: 'inactive',
           description: 'Estado del producto'
         },
         name: {
@@ -60,33 +63,33 @@ Incluye:
         description: {
           type: 'string',
           example: 'Remera básica de algodón, ideal para uso diario',
-          description: 'Descripción completa del producto'
+          description: 'Descripción del producto'
         },
         brandId: {
           type: 'string',
           example: '3105',
-          description: 'ID de marca existente en VTEX'
+          description: 'ID de la marca existente en VTEX'
         },
         categoryIds: {
           type: 'array',
           items: { type: 'string' },
-          example: ['102', '527'],
-          description: 'IDs de categorías asociadas'
+          example: ['102'],
+          description: 'IDs de categorías del producto'
         },
         specs: {
           type: 'array',
           example: [],
-          description: 'Especificaciones del producto (opcional)'
+          description: 'Especificaciones del producto'
         },
         attributes: {
           type: 'array',
           example: [],
-          description: 'Atributos del producto (opcional)'
+          description: 'Atributos del producto'
         },
         slug: {
           type: 'string',
-          example: '/remera-basica-algodon',
-          description: 'Slug / URL del producto (único)'
+          example: 'remera-basica-algodon',
+          description: 'Slug / URL del producto'
         },
         images: {
           type: 'array',
@@ -116,11 +119,16 @@ Incluye:
         },
         skus: {
           type: 'array',
-          description: 'Lista de SKUs del producto',
+          description: 'SKUs asociados al producto (OBLIGATORIOS)',
           items: {
             type: 'object',
-            required: ['externalId', 'name', 'ean', 'isActive', 'weight', 'dimensions', 'images'],
+            required: ['id', 'externalId', 'name', 'ean', 'isActive', 'weight', 'dimensions', 'images'],
             properties: {
+              id: {
+                type: 'string',
+                example: '2173',
+                description: 'ID numérico del SKU'
+              },
               externalId: {
                 type: 'string',
                 example: 'ALT-TSHIRT-002-S',
@@ -144,24 +152,15 @@ Incluye:
               weight: {
                 type: 'number',
                 example: 0.3,
-                description: 'Peso del SKU (kg)'
+                description: 'Peso del SKU'
               },
               dimensions: {
                 type: 'object',
                 required: ['width', 'height', 'length'],
                 properties: {
-                  width: {
-                    type: 'number',
-                    example: 30
-                  },
-                  height: {
-                    type: 'number',
-                    example: 2
-                  },
-                  length: {
-                    type: 'number',
-                    example: 40
-                  }
+                  width: { type: 'number', example: 30 },
+                  height: { type: 'number', example: 2 },
+                  length: { type: 'number', example: 40 }
                 }
               },
               specs: {
@@ -181,13 +180,13 @@ Incluye:
         origin: {
           type: 'string',
           example: 'tiendaloquieroaca924',
-          description: 'Identificador del seller / origen'
+          description: 'Identificador del seller'
         }
       }
     }
   })
-  @Post()
-  async create(@Body() body: CreateOnCityProductRequestDto) {
-    return this.service.create(body);
+  @Put(':productId')
+  async updateProduct(@Param('productId') productId: string, @Body() body: UpdateOnCityProductRequestDto) {
+    return this.service.update(productId, body);
   }
 }
