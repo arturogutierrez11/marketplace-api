@@ -2,9 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { OnCityHttpClient } from '../../http/OnCityHttpClient';
 import { OnCityGetSkuByIdResponse } from 'src/core/entities/oncity/products/get/OnCityGetSkuByIdResponse';
 import { OnCityGetSkuByIdRawResponse } from 'src/core/entities/oncity/products/get/OnCityGetSkuByIdRawResponse';
+import { IOnCityGetSkuByIdRepository } from 'src/core/adapters/repositories/oncity/products/get/IOnCityGetSkuByIdRepository';
 
 @Injectable()
-export class OnCityGetSkuByIdRepository {
+export class OnCityGetSkuByIdRepository implements IOnCityGetSkuByIdRepository {
   constructor(private readonly httpClient: OnCityHttpClient) {}
 
   async execute(skuId: number): Promise<OnCityGetSkuByIdResponse> {
@@ -19,7 +20,8 @@ export class OnCityGetSkuByIdRepository {
       ean: response.AlternateIds?.Ean ?? null,
       name: response.NameComplete,
       brand: response.BrandName,
-      isActive: response.IsActive
+      isActive: response.IsActive,
+      DetailUrl: `https://www.oncity.com${response.DetailUrl}`
     };
   }
 

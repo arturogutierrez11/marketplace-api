@@ -12,26 +12,13 @@ export class OnCityCreateProductService {
     private readonly repository: IOnCityCreateProductRepository
   ) {}
 
-  async create(body: CreateOnCityProductRequestDto): Promise<OnCityProduct> {
-    // 🔐 Reglas VTEX (negocio)
-    const isType1 = !!body.CategoryPath || !!body.BrandName;
-    const isType2 = !!body.CategoryId || !!body.BrandId;
-
-    if (isType1 && isType2) {
-      throw new BadRequestException('No se puede mezclar CategoryPath/BrandName con CategoryId/BrandId');
-    }
-
-    if (!isType1 && !isType2) {
-      throw new BadRequestException('Debe enviar CategoryPath+BrandName o CategoryId+BrandId');
-    }
-
+  async create(body: CreateOnCityProductRequestDto) {
     try {
       return await this.repository.create(body);
     } catch (error) {
       if (error instanceof OnCityHttpError && error.statusCode === 403) {
-        throw new ForbiddenException('La API Key no tiene permisos de Product and SKU Management');
+        throw new ForbiddenException('La API Key no tiene permisos de Seller Portal');
       }
-
       throw error;
     }
   }

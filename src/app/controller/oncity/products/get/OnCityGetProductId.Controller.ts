@@ -14,7 +14,7 @@ export class OnCityGetProductIdController {
   @Get()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Obtener ProductIds y SkuIds desde VTEX',
+    summary: 'Obtener los ids de las publicaciones de oncity',
     description: 'Devuelve un mapa ProductId → SkuIds, con paginado obligatorio (_from, _to)'
   })
   @ApiQuery({

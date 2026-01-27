@@ -15,8 +15,8 @@ export class OnCityGetSkuByIdController {
   @Get(':skuId')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Obtener detalle de SKU por skuId (VTEX)',
-    description: 'Devuelve información del SKU incluyendo RefId (SKU propio), EAN y datos básicos del producto'
+    summary: 'Obtener detalle de un SKU por skuId',
+    description: 'Devuelve poca información del SKU'
   })
   @ApiParam({
     name: 'skuId',
@@ -53,7 +53,7 @@ export class OnCityGetSkuByIdController {
   @Get(':skuId/raw')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Obtener detalle completo RAW del SKU desde VTEX',
+    summary: 'Obtener detalle completo de un SKU',
     description: 'Devuelve el payload completo de VTEX sin transformaciones'
   })
   @ApiParam({
