@@ -2,9 +2,12 @@ import { Injectable } from '@nestjs/common';
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import { OnCityHttpError } from './errors/OnCityHttpError';
 
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+
 @Injectable()
 export class OnCityHttpClient {
   private readonly client: AxiosInstance;
+  private readonly MAX_RETRIES = 3;
 
   constructor() {
     const account = process.env.ONCITY_ACCOUNT;
@@ -17,7 +20,7 @@ export class OnCityHttpClient {
 
     this.client = axios.create({
       baseURL: `https://${account}.vtexcommercestable.com.br`,
-      timeout: 30000,
+      timeout: 4000,
       headers: {
         'X-VTEX-API-AppKey': appKey,
         'X-VTEX-API-AppToken': appToken,
@@ -27,51 +30,83 @@ export class OnCityHttpClient {
     });
   }
 
+  /* ========================== GET ========================== */
   async get<T>(url: string): Promise<T> {
-    try {
-      const response = await this.client.get<T>(url);
-      return response.data;
-    } catch (error) {
-      const err = error as AxiosError;
-
-      if (err.response) {
-        throw new Error(`[ONCITY GET] ${url} → ${err.response.status} ${JSON.stringify(err.response.data)}`);
-      }
-
-      throw new Error(`[ONCITY GET] ${url} → ${err.message}`);
-    }
+    return this.requestWithRetry<T>(() => this.client.get<T>(url), 'GET', url);
   }
 
+  /* ========================== POST ========================= */
   async post<T>(url: string, body: any): Promise<T> {
-    try {
-      const response = await this.client.post<T>(url, body);
-      return response.data;
-    } catch (error) {
-      const err = error as AxiosError;
-
-      if (err.response) {
-        throw new OnCityHttpError(err.response.status, err.response.data, `[ONCITY POST] ${url}`);
-      }
-
-      throw new Error(`[ONCITY POST] ${url} → ${err.message}`);
-    }
+    return this.requestWithRetry<T>(() => this.client.post<T>(url, body), 'POST', url);
   }
 
+  /* ========================== PUT ========================== */
   async put<T>(url: string, body: any, options?: { baseURL?: string }): Promise<T> {
-    try {
-      const response = await this.client.put<T>(url, body, {
-        baseURL: options?.baseURL
-      });
+    return this.requestWithRetry<T>(
+      () =>
+        this.client.put<T>(url, body, {
+          baseURL: options?.baseURL
+        }),
+      'PUT',
+      url
+    );
+  }
 
-      return response.data;
-    } catch (error) {
-      const err = error as AxiosError;
+  /* ===================== CORE RETRY ======================== */
+  private async requestWithRetry<T>(
+    fn: () => Promise<{ data: T }>,
+    method: 'GET' | 'POST' | 'PUT',
+    url: string
+  ): Promise<T> {
+    for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
+      try {
+        const response = await fn();
+        return response.data;
+      } catch (error) {
+        const err = error as AxiosError;
+        const status = err.response?.status;
 
-      if (err.response) {
-        throw new OnCityHttpError(err.response.status, err.response.data, `[ONCITY PUT] ${url}`);
+        /* ⏱ TIMEOUT / CANCEL */
+        if (err.code === 'ECONNABORTED') {
+          if (attempt < this.MAX_RETRIES) {
+            await sleep(attempt * 600);
+            continue;
+          }
+
+          throw new OnCityHttpError(null, null, 'TIMEOUT', `[ONCITY ${method}] ${url} → TIMEOUT`);
+        }
+
+        /* RATE LIMIT / VTEX SATURADO */
+        if (status === 429 || status === 500) {
+          if (attempt < this.MAX_RETRIES) {
+            await sleep(attempt * 1000);
+            continue;
+          }
+
+          throw new OnCityHttpError(
+            status,
+            err.response?.data,
+            'RATE_LIMIT',
+            `[ONCITY ${method}] ${url} → ${status} ${JSON.stringify(err.response?.data)}`
+          );
+        }
+
+        /* OTROS ERRORES*/
+        if (status && status >= 500) {
+          throw new OnCityHttpError(status, err.response?.data, 'SERVER', `[ONCITY ${method}] ${url} → ${status}`);
+        }
+
+        /*DESCONOCIDO */
+        throw new OnCityHttpError(
+          status ?? null,
+          err.response?.data ?? err.message,
+          'UNKNOWN',
+          `[ONCITY ${method}] ${url} → ${err.message}`
+        );
       }
-
-      throw new Error(`[ONCITY PUT] ${url} → ${err.message}`);
     }
+
+    // nunca debería llegar acá
+    throw new OnCityHttpError(null, null, 'UNKNOWN', `[ONCITY ${method}] ${url} → UNKNOWN`);
   }
 }

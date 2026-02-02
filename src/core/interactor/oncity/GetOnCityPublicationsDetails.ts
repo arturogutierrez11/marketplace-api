@@ -38,6 +38,8 @@ function resolveStatus(params: { isActive: boolean; stock: number }): Publicatio
 }
 @Injectable()
 export class GetOnCityPublicationsDetails {
+  private readonly CONCURRENCY = 5;
+
   constructor(
     @Inject('IOnCityGetProductIdRepository')
     private readonly productIdsRepo: IOnCityGetProductIdRepository,
@@ -53,30 +55,45 @@ export class GetOnCityPublicationsDetails {
     const { offset, limit } = params;
     const to = offset + limit - 1;
 
-    /* --------------------------- 1) Obtener IDs ---------------------------- */
+    /* 1️⃣ Obtener IDs */
     const response = await this.productIdsRepo.execute(offset, to);
 
-    /* -------------------- 2) Extraer skuIds desde data --------------------- */
-    const skuIds: number[] = [];
+    /* 2️⃣ Extraer skuIds */
+    const skuIds = Object.values(response.data).flat();
 
-    for (const skus of Object.values(response.data)) {
-      for (const skuId of skus) {
-        skuIds.push(skuId);
-      }
-    }
+    /* 3️⃣ Procesar SKUs con concurrencia controlada */
+    const results = await this.processInBatches(skuIds, this.CONCURRENCY, skuId => this.buildItem(skuId));
 
-    /* ---------------------- 3) Declarar items ------------------------------ */
-    const items: OnCityPublicationItem[] = [];
+    /* 4️⃣ Filtrar fallidos */
+    const items = results.filter(Boolean) as OnCityPublicationItem[];
 
-    /* ---------------------- 4) Iteración controlada ------------------------ */
-    for (const skuId of skuIds) {
-      const sku = await this.skuRepo.executeRaw(skuId);
-      const price = await this.priceRepo.getBySku(skuId);
-      const stock = await this.stockRepo.getBySku(skuId);
+    /* 5️⃣ Metadata */
+    const hasNext = response.range.to < response.range.total;
 
-      const availableStock = stock.available;
+    return {
+      items,
+      total: response.range.total,
+      limit,
+      offset,
+      count: items.length,
+      hasNext,
+      nextOffset: hasNext ? response.range.to + 1 : null
+    };
+  }
 
-      items.push({
+  /* ================== helpers ================== */
+
+  private async buildItem(skuId: number): Promise<OnCityPublicationItem | null> {
+    try {
+      const [sku, price, stock] = await Promise.all([
+        this.skuRepo.executeRaw(skuId),
+        this.priceRepo.getBySku(skuId),
+        this.stockRepo.getBySku(skuId)
+      ]);
+
+      const availableStock = stock?.available ?? 0;
+
+      return {
         publicationId: skuId,
         sellerSku: sku.AlternateIds?.RefId ?? skuId.toString(),
         marketSku: skuId.toString(),
@@ -89,22 +106,21 @@ export class GetOnCityPublicationsDetails {
         }),
         linkPublicacion: sku.DetailUrl ? `https://www.oncity.com${sku.DetailUrl}` : 'https://www.oncity.com',
         images: Array.isArray(sku.Images) ? sku.Images.map(img => img.ImageUrl) : []
-      });
+      };
+    } catch {
+      return null;
+    }
+  }
 
-      await sleep(120);
+  private async processInBatches<T, R>(items: T[], batchSize: number, handler: (item: T) => Promise<R>): Promise<R[]> {
+    const results: R[] = [];
+
+    for (let i = 0; i < items.length; i += batchSize) {
+      const batch = items.slice(i, i + batchSize);
+      const batchResults = await Promise.all(batch.map(handler));
+      results.push(...batchResults);
     }
 
-    /* ------------------------- 5) Metadata paginado ------------------------ */
-    const hasNext = response.range.to < response.range.total;
-
-    return {
-      items,
-      total: response.range.total,
-      limit,
-      offset,
-      count: items.length,
-      hasNext,
-      nextOffset: hasNext ? response.range.to + 1 : null
-    };
+    return results;
   }
 }

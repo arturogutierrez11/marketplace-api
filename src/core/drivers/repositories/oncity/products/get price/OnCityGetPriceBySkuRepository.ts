@@ -4,6 +4,7 @@ import {
   IOnCityGetPriceBySkuRepository,
   OnCitySkuPrice
 } from 'src/core/adapters/repositories/oncity/products/get-price/IOnCityGetPriceBySkuRepository';
+import { OnCityHttpError } from '../../http/errors/OnCityHttpError';
 
 @Injectable()
 export class OnCityGetPriceBySkuRepository implements IOnCityGetPriceBySkuRepository {
@@ -18,6 +19,24 @@ export class OnCityGetPriceBySkuRepository implements IOnCityGetPriceBySkuReposi
         listPrice: response?.listPrice ?? null
       };
     } catch (error) {
+      /**
+       * ⚠️ DEGRADACIÓN ELEGANTE
+       *
+       * Casos cubiertos:
+       * - 429 Too Many Requests
+       * - 500 / VTEX saturated
+       * - Timeout
+       * - Operation was canceled
+       *
+       * Precio desconocido => null
+       * El interactor define fallback (price ?? 0)
+       */
+
+      // (opcional) log de diagnóstico
+      if (error instanceof OnCityHttpError) {
+        console.warn(`[OnCity][PriceFallback] SKU ${skuId} - ${error.errorType}`);
+      }
+
       return null;
     }
   }
