@@ -1,18 +1,29 @@
-import { OnCityOrderListItemDto } from '../dto/OnCityOrderListItemDto';
-import { MarketplaceOrder } from '../OnCityOrder';
+import { OnCityOrder } from '../OnCityOrder';
+import { OnCityOrderRawDto } from '../dto/OnCityOrderResponseDto';
 
-export class OnCityOrderListMapper {
-  static toEntity(dto: OnCityOrderListItemDto): MarketplaceOrder {
+export class OnCityOrderMapper {
+  static toEntity(dto: OnCityOrderRawDto): OnCityOrder {
+    const [nombre, ...apellido] = (dto.clientName ?? '').trim().split(' ').filter(Boolean);
+
     return {
-      orderId: dto.orderId,
-      createdAt: dto.creationDate,
-      clientName: dto.clientName?.trim(),
-      total: dto.totalValue,
-      status: dto.status,
-      statusDescription: dto.statusDescription,
-      salesChannel: dto.salesChannel,
-      affiliateId: dto.affiliateId,
-      sequence: dto.sequence
+      IdOrden: dto.sequence ? Number(dto.sequence) : null,
+      Fecha: dto.creationDate ?? null,
+      MontoVenta: dto.totalValue ?? null,
+
+      Cliente: {
+        Nombre: nombre || null,
+        Apellido: apellido.join(' ') || null
+      },
+
+      Estado: [
+        {
+          IdEstado: null,
+          Descripcion: dto.statusDescription ?? dto.status ?? null,
+          Fecha: dto.lastChange ?? null
+        }
+      ],
+
+      Productos: []
     };
   }
 }

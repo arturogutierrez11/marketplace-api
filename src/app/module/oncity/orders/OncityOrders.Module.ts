@@ -8,11 +8,11 @@ import { OnCityGetOrdersRepository } from 'src/core/drivers/repositories/oncity/
   controllers: [OnCityGetOrdersController],
   providers: [
     OnCityGetOrdersService,
+    OnCityHttpClient,
     {
       provide: 'IOnCityGetOrdersRepository',
       useClass: OnCityGetOrdersRepository
-    },
-    OnCityHttpClient
+    }
   ],
   exports: [OnCityGetOrdersService]
 })

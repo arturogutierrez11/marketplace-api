@@ -1,5 +1,5 @@
-import { OnCityOrdersListResponseDto } from 'src/core/entities/oncity/orders/dto/OnCityOrderResponseDto';
+import { OnCityOrder } from 'src/core/entities/oncity/orders/OnCityOrder';
 
 export interface IOnCityGetOrdersRepository {
-  list(): Promise<OnCityOrdersListResponseDto>;
+  getOrders(params: { fechaDesde: string; fechaHasta: string }): Promise<OnCityOrder[]>;
 }

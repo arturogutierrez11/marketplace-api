@@ -4,6 +4,7 @@ import { MegatoneProductsModule } from './module/megatone/products/MegatoneProdu
 import { OnCityOrdersModule } from './module/oncity/orders/OncityOrders.Module';
 import { OnCityBrandsModule } from './module/oncity/brands/OnCityBrands.Module';
 import { OnCityProductsModule } from './module/oncity/products/OncityProducts.Module';
+import { MegatoneOrdersModule } from './module/megatone/orders/MegatoneOrders.module';
 
 @Module({
   imports: [
@@ -13,7 +14,8 @@ import { OnCityProductsModule } from './module/oncity/products/OncityProducts.Mo
     MegatoneProductsModule,
     OnCityOrdersModule,
     OnCityBrandsModule,
-    OnCityProductsModule
+    OnCityProductsModule,
+    MegatoneOrdersModule
   ]
 })
 export class AppModule {}
