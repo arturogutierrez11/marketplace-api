@@ -103,7 +103,7 @@ Incluye:
               url: {
                 type: 'string',
                 example:
-                  'https://tiendaloquieroaca924.vtexassets.com/assets/vtex.catalog-images/products/remera-algodon-front___hash.jpg',
+                  'https://tiendaloquieroaca924.vtexassets.com/assets/vtex.catalog-images/products/examplePhoneImageBlue.png',
                 description: 'URL pública del asset'
               },
               alt: {
