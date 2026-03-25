@@ -4,6 +4,7 @@ import { FravegaUpdateItemService } from 'src/app/services/fravega/update/Fraveg
 import { FravegaConfig } from 'src/core/drivers/repositories/fravega/Config/FravegaConfig';
 import { FravegaHttpClient } from 'src/core/drivers/repositories/fravega/http/FravegaHttpClient';
 import { FravegaUpdateItemByIdRepository } from 'src/core/drivers/repositories/fravega/update/Id/FravegaUpdateItemByIdRepository';
+import { FravegaUpdateAttributesByRefIdRepository } from 'src/core/drivers/repositories/fravega/update/refeId/FravegaUpdateAttributesByRefIdRepository';
 import { FravegaUpdateItemByRefIdRepository } from 'src/core/drivers/repositories/fravega/update/refeId/FravegaUpdateItemByRefIdRepository';
 
 @Module({
@@ -17,6 +18,10 @@ import { FravegaUpdateItemByRefIdRepository } from 'src/core/drivers/repositorie
     {
       provide: 'IFravegaUpdateItemByRefIdRepository',
       useClass: FravegaUpdateItemByRefIdRepository
+    },
+    {
+      provide: 'IFravegaUpdateAttributesByRefIdRepository',
+      useClass: FravegaUpdateAttributesByRefIdRepository
     },
     FravegaHttpClient,
     FravegaConfig
