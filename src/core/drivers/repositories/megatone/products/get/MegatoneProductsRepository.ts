@@ -13,7 +13,6 @@ import { Logger } from '../../../../logger/Logger';
 
 @Injectable()
 export class MegatoneProductsRepository implements IMegatoneGetProductsRepository {
-  private readonly upstreamPageSize = 10;
   private readonly sellerId = MegatoneSellerContext.getSellerId();
 
   constructor(private readonly http: MegatoneHttpClient) {}
@@ -59,86 +58,47 @@ export class MegatoneProductsRepository implements IMegatoneGetProductsRepositor
     pagination: PaginationParams,
     mapItem: (item: MegatoneProductDto) => T
   ): Promise<PaginatedResult<T>> {
-    const externalOffset = Math.max(pagination.offset, 1);
-    const zeroBasedOffset = externalOffset - 1;
-    const logicalPage = Math.floor(zeroBasedOffset / this.upstreamPageSize) + 1;
-    const skip = zeroBasedOffset % this.upstreamPageSize;
-    const needed = skip + pagination.limit;
-
-    const collected: T[] = [];
-    let total = 0;
-    let currentLogicalPage = logicalPage;
+    const logicalPage = Math.max(pagination.offset, 1);
+    const response = await this.fetchLogicalPage(logicalPage, pagination.limit);
+    const content = this.getContent(response);
+    const physicalPage = this.toPhysicalPage(logicalPage);
+    const total = response.Total;
+    const totalPages = Math.ceil(total / pagination.limit);
+    const items = content.map(mapItem);
+    const count = items.length;
+    const nextOffset = logicalPage < totalPages ? logicalPage + 1 : null;
 
     Logger.info(
       `[MEGATONE PRODUCTS PAGINATION] start ${JSON.stringify({
-        offset: externalOffset,
-        zeroBasedOffset,
+        offset: logicalPage,
         limit: pagination.limit,
-        upstreamPageSize: this.upstreamPageSize,
         logicalPage,
-        skip,
-        needed
+        physicalPage
       })}`
     );
 
-    while (collected.length < needed) {
-      const response = await this.fetchLogicalPage(currentLogicalPage);
-      const content = this.getContent(response);
-      const physicalPage = this.toPhysicalPage(currentLogicalPage);
-
-      Logger.info(
-        `[MEGATONE PRODUCTS PAGINATION] upstream-page ${JSON.stringify({
-          logicalPage: currentLogicalPage,
+    if (content.length === 0) {
+      Logger.warn(
+        `[MEGATONE PRODUCTS PAGINATION] empty-upstream-page ${JSON.stringify({
+          offset: logicalPage,
+          logicalPage,
           physicalPage,
-          responseTotal: response.Total,
-          responseTotalPages: response.TotalPages,
-          responsePage: response.Page,
-          responsePageSize: response.PageSize,
-          contentLength: content.length,
-          collectedBefore: collected.length
+          limit: pagination.limit,
+          total
         })}`
       );
-
-      if (total === 0) {
-        total = response.Total;
-      }
-
-      if (content.length === 0) {
-        Logger.warn(
-          `[MEGATONE PRODUCTS PAGINATION] empty-upstream-page ${JSON.stringify({
-            logicalPage: currentLogicalPage,
-            physicalPage,
-            offset: externalOffset,
-            zeroBasedOffset,
-            limit: pagination.limit,
-            collected: collected.length,
-            total
-          })}`
-        );
-        break;
-      }
-
-      collected.push(...content.map(mapItem));
-
-      const logicalOffset = (currentLogicalPage - 1) * this.upstreamPageSize;
-      if (logicalOffset + content.length >= total) {
-        break;
-      }
-
-      currentLogicalPage += 1;
     }
-
-    const items = collected.slice(skip, skip + pagination.limit);
-    const count = items.length;
-    const nextOffset = zeroBasedOffset + count < total ? externalOffset + count : null;
 
     Logger.info(
       `[MEGATONE PRODUCTS PAGINATION] result ${JSON.stringify({
-        offset: externalOffset,
-        zeroBasedOffset,
+        offset: logicalPage,
         limit: pagination.limit,
-        collected: collected.length,
-        skip,
+        logicalPage,
+        physicalPage,
+        responseTotal: response.Total,
+        responseTotalPages: response.TotalPages,
+        responsePage: response.Page,
+        responsePageSize: response.PageSize,
         count,
         total,
         hasNext: nextOffset !== null,
@@ -150,21 +110,21 @@ export class MegatoneProductsRepository implements IMegatoneGetProductsRepositor
       items,
       total,
       limit: pagination.limit,
-      offset: externalOffset,
+      offset: logicalPage,
       count,
       hasNext: nextOffset !== null,
       nextOffset
     };
   }
 
-  private async fetchLogicalPage(logicalPage: number): Promise<MegatoneGetProductsResponseDto> {
+  private async fetchLogicalPage(logicalPage: number, limit: number): Promise<MegatoneGetProductsResponseDto> {
     const physicalPage = this.toPhysicalPage(logicalPage);
 
     return this.http.get<MegatoneGetProductsResponseDto>('/api/MarketplaceCore/Publicaciones', {
       params: {
         IdSeller: this.sellerId,
         Pagina: physicalPage,
-        Cantidad: this.upstreamPageSize
+        Cantidad: limit
       }
     });
   }
