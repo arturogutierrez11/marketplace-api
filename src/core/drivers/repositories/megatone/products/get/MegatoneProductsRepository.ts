@@ -116,7 +116,7 @@ export class MegatoneProductsRepository implements IMegatoneGetProductsRepositor
   }
 
   private toPhysicalPage(logicalPage: number): number {
-    return logicalPage <= 1 ? 1 : logicalPage + 1;
+    return logicalPage + Math.floor(logicalPage / 2);
   }
 
   private getContent(response: MegatoneGetProductsResponseDto): MegatoneProductDto[] {
