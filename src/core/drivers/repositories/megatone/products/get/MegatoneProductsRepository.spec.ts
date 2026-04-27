@@ -27,7 +27,12 @@ describe('MegatoneProductsRepository', () => {
           1: makeResponse(1),
           3: makeResponse(11),
           4: makeResponse(21),
-          6: makeResponse(31)
+          6: makeResponse(31),
+          7: makeResponse(41),
+          9: makeResponse(51),
+          10: makeResponse(61),
+          12: makeResponse(71),
+          14: makeResponse(81)
         };
 
         return pages[config.params.Pagina] ?? {
@@ -61,6 +66,35 @@ describe('MegatoneProductsRepository', () => {
       expect.objectContaining({
         params: expect.objectContaining({
           Pagina: 6,
+          Cantidad: 10
+        })
+      })
+    );
+  });
+
+  it('keeps scanning when a later physical page is unexpectedly empty', async () => {
+    const { repository, http } = createRepository();
+
+    const result = await repository.listIds({ offset: 9, limit: 10 });
+
+    expect(result.items).toHaveLength(10);
+    expect(result.items[0]).toEqual({ publicationId: 81, sellerSku: 'SKU-81' });
+    expect(result.offset).toBe(9);
+    expect(result.nextOffset).toBe(10);
+    expect(http.get).toHaveBeenCalledWith(
+      '/api/MarketplaceCore/Publicaciones',
+      expect.objectContaining({
+        params: expect.objectContaining({
+          Pagina: 13,
+          Cantidad: 10
+        })
+      })
+    );
+    expect(http.get).toHaveBeenCalledWith(
+      '/api/MarketplaceCore/Publicaciones',
+      expect.objectContaining({
+        params: expect.objectContaining({
+          Pagina: 14,
           Cantidad: 10
         })
       })

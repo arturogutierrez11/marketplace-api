@@ -14,6 +14,14 @@ import { Logger } from '../../../../logger/Logger';
 @Injectable()
 export class MegatoneProductsRepository implements IMegatoneGetProductsRepository {
   private readonly sellerId = MegatoneSellerContext.getSellerId();
+  private readonly paginationCache = new Map<
+    number,
+    {
+      scannedPhysicalPage: number;
+      total: number | null;
+      validPhysicalPages: number[];
+    }
+  >();
 
   constructor(private readonly http: MegatoneHttpClient) {}
 
@@ -59,9 +67,8 @@ export class MegatoneProductsRepository implements IMegatoneGetProductsRepositor
     mapItem: (item: MegatoneProductDto) => T
   ): Promise<PaginatedResult<T>> {
     const logicalPage = Math.max(pagination.offset, 1);
-    const response = await this.fetchLogicalPage(logicalPage, pagination.limit);
+    const { response, physicalPage, skippedPhysicalPages } = await this.fetchLogicalPage(logicalPage, pagination.limit);
     const content = this.getContent(response);
-    const physicalPage = this.toPhysicalPage(logicalPage);
     const total = response.Total;
     const totalPages = Math.ceil(total / pagination.limit);
     const items = content.map(mapItem);
@@ -73,7 +80,8 @@ export class MegatoneProductsRepository implements IMegatoneGetProductsRepositor
         offset: logicalPage,
         limit: pagination.limit,
         logicalPage,
-        physicalPage
+        physicalPage,
+        skippedPhysicalPages
       })}`
     );
 
@@ -117,9 +125,58 @@ export class MegatoneProductsRepository implements IMegatoneGetProductsRepositor
     };
   }
 
-  private async fetchLogicalPage(logicalPage: number, limit: number): Promise<MegatoneGetProductsResponseDto> {
-    const physicalPage = this.toPhysicalPage(logicalPage);
+  private async fetchLogicalPage(
+    logicalPage: number,
+    limit: number
+  ): Promise<{
+    response: MegatoneGetProductsResponseDto;
+    physicalPage: number;
+    skippedPhysicalPages: number[];
+  }> {
+    const cache = this.getPaginationCache(limit);
+    const skippedPhysicalPages: number[] = [];
 
+    while (cache.validPhysicalPages.length < logicalPage) {
+      const physicalPage = cache.scannedPhysicalPage + 1;
+      const response = await this.fetchPhysicalPage(physicalPage, limit);
+      const content = this.getContent(response);
+
+      cache.scannedPhysicalPage = physicalPage;
+
+      if (response.Total > 0) {
+        cache.total = response.Total;
+      }
+
+      if (content.length === 0) {
+        skippedPhysicalPages.push(physicalPage);
+        Logger.warn(
+          `[MEGATONE PRODUCTS PAGINATION] skipped-empty-physical-page ${JSON.stringify({
+            logicalPage,
+            physicalPage,
+            limit,
+            responseTotal: response.Total,
+            responseTotalPages: response.TotalPages,
+            responsePage: response.Page,
+            responsePageSize: response.PageSize
+          })}`
+        );
+        continue;
+      }
+
+      cache.validPhysicalPages.push(physicalPage);
+
+      if (cache.validPhysicalPages.length === logicalPage) {
+        return { response, physicalPage, skippedPhysicalPages };
+      }
+    }
+
+    const physicalPage = cache.validPhysicalPages[logicalPage - 1];
+    const response = await this.fetchPhysicalPage(physicalPage, limit);
+
+    return { response, physicalPage, skippedPhysicalPages };
+  }
+
+  private async fetchPhysicalPage(physicalPage: number, limit: number): Promise<MegatoneGetProductsResponseDto> {
     return this.http.get<MegatoneGetProductsResponseDto>('/api/MarketplaceCore/Publicaciones', {
       params: {
         IdSeller: this.sellerId,
@@ -129,8 +186,19 @@ export class MegatoneProductsRepository implements IMegatoneGetProductsRepositor
     });
   }
 
-  private toPhysicalPage(logicalPage: number): number {
-    return logicalPage + Math.floor(logicalPage / 2);
+  private getPaginationCache(limit: number) {
+    const existing = this.paginationCache.get(limit);
+    if (existing) return existing;
+
+    const created = {
+      scannedPhysicalPage: 0,
+      total: null,
+      validPhysicalPages: []
+    };
+
+    this.paginationCache.set(limit, created);
+
+    return created;
   }
 
   private getContent(response: MegatoneGetProductsResponseDto): MegatoneProductDto[] {
