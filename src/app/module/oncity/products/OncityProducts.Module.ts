@@ -8,11 +8,15 @@ import { OnCityGetProductIdController } from 'src/app/controller/oncity/products
 import { OnCityGetSkuByIdController } from 'src/app/controller/oncity/products/get/OnCityGetSkuById.Controller';
 import { OnCityPublicationsController } from 'src/app/controller/oncity/products/get/GetOnCityPublicationsDetails.Controller';
 import { OnCityUpdateProductController } from 'src/app/controller/oncity/products/update-status/OnCityUpdateProduct.Controller';
+import { OnCityLocalTokenController } from 'src/app/controller/oncity/auth/OnCityLocalToken.Controller';
+import { OnCityUploadImageController } from 'src/app/controller/oncity/products/images/OnCityUploadImage.Controller';
 
 /* ------------------------------- Services ------------------------------- */
 import { OnCityCreateProductService } from 'src/app/services/oncity/products/create/OnCityCreateProductService';
 import { GetOnCityPublicationsDetailsService } from 'src/app/services/oncity/products/get/GetOnCityPublicationsDetailsService';
 import { OnCityUpdateStatusProductService } from 'src/app/services/oncity/products/update-status/OnCityUpdateStatusProductService';
+import { OnCityLocalTokenService } from 'src/app/services/oncity/auth/OnCityLocalTokenService';
+import { OnCityUploadImageService } from 'src/app/services/oncity/products/images/OnCityUploadImageService';
 
 /* ------------------------------ Interactors ----------------------------- */
 import { GetOnCityPublicationsDetails } from 'src/core/interactor/oncity/GetOnCityPublicationsDetails';
@@ -29,6 +33,8 @@ import { OnCityGetStockBySkuRepository } from 'src/core/drivers/repositories/onc
 import { OnCityHttpClient } from 'src/core/drivers/repositories/oncity/http/OnCityHttpClient';
 import { OnCityGetPriceBySkuRepository } from 'src/core/drivers/repositories/oncity/products/get price/OnCityGetPriceBySkuRepository';
 import { OnCityUpdateProductRepository } from 'src/core/drivers/repositories/oncity/update-status/OnCityUpdateProductRepository';
+import { OnCityLocalTokenRepository } from 'src/core/drivers/repositories/oncity/auth/OnCityLocalTokenRepository';
+import { OnCityUploadImageRepository } from 'src/core/drivers/repositories/oncity/products/images/OnCityUploadImageRepository';
 
 @Module({
   controllers: [
@@ -38,13 +44,17 @@ import { OnCityUpdateProductRepository } from 'src/core/drivers/repositories/onc
     OnCityGetProductIdController,
     OnCityGetSkuByIdController,
     OnCityPublicationsController,
-    OnCityUpdateProductController // 👈 NUEVO
+    OnCityUpdateProductController, // 👈 NUEVO
+    OnCityLocalTokenController,
+    OnCityUploadImageController
   ],
   providers: [
     /* ----------------------------- Services ----------------------------- */
     OnCityCreateProductService,
     GetOnCityPublicationsDetailsService,
     OnCityUpdateStatusProductService, // 👈 NUEVO
+    OnCityLocalTokenService,
+    OnCityUploadImageService,
 
     /* ---------------------------- Interactors --------------------------- */
     GetOnCityPublicationsDetails,
@@ -82,6 +92,14 @@ import { OnCityUpdateProductRepository } from 'src/core/drivers/repositories/onc
       provide: 'IOnCityUpdateProductRepository',
       useClass: OnCityUpdateProductRepository
     },
+    {
+      provide: 'IOnCityLocalTokenRepository',
+      useClass: OnCityLocalTokenRepository
+    },
+    {
+      provide: 'IOnCityUploadImageRepository',
+      useClass: OnCityUploadImageRepository
+    },
 
     /* --------------------------- HTTP Client ---------------------------- */
     OnCityHttpClient
@@ -89,7 +107,9 @@ import { OnCityUpdateProductRepository } from 'src/core/drivers/repositories/onc
   exports: [
     OnCityCreateProductService,
     GetOnCityPublicationsDetailsService,
-    OnCityUpdateStatusProductService // 👈 opcional, pero prolijo
+    OnCityUpdateStatusProductService, // 👈 opcional, pero prolijo
+    OnCityLocalTokenService,
+    OnCityUploadImageService
   ]
 })
 export class OnCityProductsModule {}
