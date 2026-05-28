@@ -1,5 +1,12 @@
 import { FravegaProduct } from './FravegaProduct';
 
+export interface FravegaProductsPage {
+  total: number;
+  page: number;
+  size: number;
+  data: FravegaProduct[];
+}
+
 export type FravegaProductsApiResponse =
   | FravegaProduct[]
   | {
