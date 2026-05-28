@@ -1,8 +1,7 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { GetFravegaProductsService } from 'src/app/services/fravega/products/get/GetFravegaProductsService';
-import { PaginatedResult } from 'src/core/entities/common/PaginatedResult';
-import { FravegaProduct } from 'src/core/entities/fravega/products/get/FravegaProduct';
+import { FravegaProductsPage } from 'src/core/entities/fravega/products/get/FravegaProductsApiResponse';
 
 @ApiTags('fravega')
 @Controller('fravega/products')
@@ -13,7 +12,7 @@ export class GetFravegaProductsController {
   @ApiQuery({ name: 'limit', required: false, example: 50 })
   @ApiQuery({ name: 'offset', required: false, example: 0 })
   @Get()
-  async list(@Query('limit') limit = '50', @Query('offset') offset = '0'): Promise<PaginatedResult<FravegaProduct>> {
+  async list(@Query('limit') limit = '50', @Query('offset') offset = '0'): Promise<FravegaProductsPage> {
     const parsedLimit = Math.min(Math.max(Number(limit) || 50, 1), 100);
     const parsedOffset = Math.max(Number(offset) || 0, 0);
 
