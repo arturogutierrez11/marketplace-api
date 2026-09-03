@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
 import { setupSwagger } from './common/swagger/swagger.setup';
 import { ValidationPipe } from '@nestjs/common';
+import { MarketplaceExceptionFilter } from './common/filters/MarketplaceExceptionFilter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,6 +14,8 @@ async function bootstrap() {
       transform: true
     })
   );
+
+  app.useGlobalFilters(new MarketplaceExceptionFilter());
 
   setupSwagger(app, 'Marketplace API', 'API para integración con marketplaces (Megatone, On city)', [
     'megatone',
